@@ -443,19 +443,23 @@
                         <span class="metric-value" id="hoverCount">0</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-label">Avg Response Time:</span>
+                        <span class="metric-label">Avg Event Response:</span>
                         <span class="metric-value" id="avgResponse">0 ms</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-label">Min Response Time:</span>
-                        <span class="metric-value" id="minResponse">0 ms</span>
+                        <span class="metric-label">Avg Paint Time:</span>
+                        <span class="metric-value" id="avgPaint">0 ms</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-label">Max Response Time:</span>
-                        <span class="metric-value" id="maxResponse">0 ms</span>
+                        <span class="metric-label">Avg Total Render:</span>
+                        <span class="metric-value" id="avgRender">0 ms</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-label">Std Deviation:</span>
+                        <span class="metric-label">Max Total Render:</span>
+                        <span class="metric-value" id="maxRender">0 ms</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Std Deviation (Render):</span>
                         <span class="metric-value" id="stdDev">0 ms</span>
                     </div>
                     <div class="metric-row">
@@ -501,10 +505,14 @@
             active: false,
             lag: 0,
             responseTimes: [],
+            paintTimes: [],
+            totalRenderTimes: [],
             hoverCount: 0,
             lastEnterTime: null,
             startTime: null,
-            sessionLabel: 'Test Session'
+            sessionLabel: 'Test Session',
+            mousePositions: [],
+            lastMouseTime: null
         };
 
         function applyConfig() {
@@ -535,6 +543,8 @@
         function resetTest() {
             testData.active = false;
             testData.responseTimes = [];
+            testData.paintTimes = [];
+            testData.totalRenderTimes = [];
             testData.hoverCount = 0;
             testData.lastEnterTime = null;
             testData.startTime = null;
@@ -563,29 +573,33 @@
             
             if (testData.responseTimes.length === 0) {
                 document.getElementById('avgResponse').textContent = '0 ms';
-                document.getElementById('minResponse').textContent = '0 ms';
-                document.getElementById('maxResponse').textContent = '0 ms';
+                document.getElementById('avgPaint').textContent = '0 ms';
+                document.getElementById('avgRender').textContent = '0 ms';
+                document.getElementById('maxRender').textContent = '0 ms';
                 document.getElementById('stdDev').textContent = '0 ms';
                 return;
             }
             
-            const avg = testData.responseTimes.reduce((a, b) => a + b, 0) / testData.responseTimes.length;
-            const min = Math.min(...testData.responseTimes);
-            const max = Math.max(...testData.responseTimes);
+            const avgResponse = testData.responseTimes.reduce((a, b) => a + b, 0) / testData.responseTimes.length;
+            const avgPaint = testData.paintTimes.length > 0 ? testData.paintTimes.reduce((a, b) => a + b, 0) / testData.paintTimes.length : 0;
+            const avgRender = testData.totalRenderTimes.length > 0 ? testData.totalRenderTimes.reduce((a, b) => a + b, 0) / testData.totalRenderTimes.length : 0;
+            const maxRender = testData.totalRenderTimes.length > 0 ? Math.max(...testData.totalRenderTimes) : 0;
             
-            const variance = testData.responseTimes.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / testData.responseTimes.length;
+            const variance = testData.totalRenderTimes.length > 0 ? 
+                testData.totalRenderTimes.reduce((sum, val) => sum + Math.pow(val - avgRender, 2), 0) / testData.totalRenderTimes.length : 0;
             const stdDev = Math.sqrt(variance);
             
-            document.getElementById('avgResponse').textContent = avg.toFixed(2) + ' ms';
-            document.getElementById('minResponse').textContent = min.toFixed(2) + ' ms';
-            document.getElementById('maxResponse').textContent = max.toFixed(2) + ' ms';
+            document.getElementById('avgResponse').textContent = avgResponse.toFixed(2) + ' ms';
+            document.getElementById('avgPaint').textContent = avgPaint.toFixed(2) + ' ms';
+            document.getElementById('avgRender').textContent = avgRender.toFixed(2) + ' ms';
+            document.getElementById('maxRender').textContent = maxRender.toFixed(2) + ' ms';
             document.getElementById('stdDev').textContent = stdDev.toFixed(2) + ' ms';
         }
 
         function updateChart() {
             const chartPlaceholder = document.getElementById('chartPlaceholder');
             
-            if (testData.responseTimes.length === 0) {
+            if (testData.totalRenderTimes.length === 0) {
                 chartPlaceholder.style.display = 'flex';
                 return;
             }
@@ -599,8 +613,8 @@
             canvas.width = canvas.offsetWidth;
             canvas.height = 200;
             
-            // Get last 20 response times
-            const recentTimes = testData.responseTimes.slice(-20);
+            // Get last 20 render times (more accurate than response times)
+            const recentTimes = testData.totalRenderTimes.slice(-20);
             const maxVal = Math.max(...recentTimes, 10);
             
             // Clear canvas
@@ -642,16 +656,16 @@
         }
 
         function updateSummary() {
-            if (testData.responseTimes.length === 0) {
+            if (testData.totalRenderTimes.length === 0) {
                 document.getElementById('summaryAvg').textContent = '0 ms';
                 document.getElementById('summaryRange').textContent = '0 ms';
                 document.getElementById('summaryRate').textContent = '0';
                 return;
             }
             
-            const avg = testData.responseTimes.reduce((a, b) => a + b, 0) / testData.responseTimes.length;
-            const min = Math.min(...testData.responseTimes);
-            const max = Math.max(...testData.responseTimes);
+            const avg = testData.totalRenderTimes.reduce((a, b) => a + b, 0) / testData.totalRenderTimes.length;
+            const min = Math.min(...testData.totalRenderTimes);
+            const max = Math.max(...testData.totalRenderTimes);
             const range = max - min;
             
             const duration = testData.startTime ? (Date.now() - testData.startTime) / 1000 : 1;
@@ -667,18 +681,35 @@
             
             const enterTime = performance.now();
             testData.lastEnterTime = enterTime;
+            const element = event.target;
             
             const lag = testData.lag;
             
+            // Measure event response time
             setTimeout(() => {
                 if (testData.lastEnterTime === enterTime) {
                     const responseTime = performance.now() - enterTime;
                     testData.responseTimes.push(responseTime);
-                    testData.hoverCount++;
                     
-                    updateMetrics();
-                    updateChart();
-                    updateSummary();
+                    // Measure paint/render time using requestAnimationFrame
+                    requestAnimationFrame(() => {
+                        const afterStyleTime = performance.now();
+                        const paintTime = afterStyleTime - enterTime;
+                        testData.paintTimes.push(paintTime);
+                        
+                        // Measure when paint actually completes
+                        requestAnimationFrame(() => {
+                            const renderCompleteTime = performance.now();
+                            const totalRenderTime = renderCompleteTime - enterTime;
+                            testData.totalRenderTimes.push(totalRenderTime);
+                            
+                            testData.hoverCount++;
+                            
+                            updateMetrics();
+                            updateChart();
+                            updateSummary();
+                        });
+                    });
                 }
             }, lag);
         }
@@ -694,10 +725,12 @@
                 return;
             }
             
-            const avg = testData.responseTimes.reduce((a, b) => a + b, 0) / testData.responseTimes.length;
-            const min = Math.min(...testData.responseTimes);
-            const max = Math.max(...testData.responseTimes);
-            const variance = testData.responseTimes.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / testData.responseTimes.length;
+            const avgResponse = testData.responseTimes.reduce((a, b) => a + b, 0) / testData.responseTimes.length;
+            const avgPaint = testData.paintTimes.length > 0 ? testData.paintTimes.reduce((a, b) => a + b, 0) / testData.paintTimes.length : 0;
+            const avgRender = testData.totalRenderTimes.reduce((a, b) => a + b, 0) / testData.totalRenderTimes.length;
+            const minRender = Math.min(...testData.totalRenderTimes);
+            const maxRender = Math.max(...testData.totalRenderTimes);
+            const variance = testData.totalRenderTimes.reduce((sum, val) => sum + Math.pow(val - avgRender, 2), 0) / testData.totalRenderTimes.length;
             const stdDev = Math.sqrt(variance);
             
             const duration = testData.startTime ? (Date.now() - testData.startTime) / 1000 : 0;
@@ -709,13 +742,17 @@
                 hoverCount: testData.hoverCount,
                 eventsPerSecond: (testData.hoverCount / duration).toFixed(2),
                 metrics: {
-                    avgResponseTime: avg.toFixed(2) + ' ms',
-                    minResponseTime: min.toFixed(2) + ' ms',
-                    maxResponseTime: max.toFixed(2) + ' ms',
+                    avgEventResponseTime: avgResponse.toFixed(2) + ' ms',
+                    avgPaintTime: avgPaint.toFixed(2) + ' ms',
+                    avgTotalRenderTime: avgRender.toFixed(2) + ' ms',
+                    minTotalRenderTime: minRender.toFixed(2) + ' ms',
+                    maxTotalRenderTime: maxRender.toFixed(2) + ' ms',
                     stdDeviation: stdDev.toFixed(2) + ' ms',
-                    range: (max - min).toFixed(2) + ' ms'
+                    range: (maxRender - minRender).toFixed(2) + ' ms'
                 },
                 allResponseTimes: testData.responseTimes,
+                allPaintTimes: testData.paintTimes,
+                allTotalRenderTimes: testData.totalRenderTimes,
                 environment: {
                     userAgent: navigator.userAgent,
                     platform: navigator.platform,
