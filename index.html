@@ -439,34 +439,10 @@
 
                 <div class="metrics-display">
                     <div class="metric-row">
-                        <span class="metric-label">Hover Events:</span>
-                        <span class="metric-value" id="hoverCount">0</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Avg Event Response:</span>
-                        <span class="metric-value" id="avgResponse">0 ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Avg Paint Time:</span>
-                        <span class="metric-value" id="avgPaint">0 ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Avg Total Render:</span>
-                        <span class="metric-value" id="avgRender">0 ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Max Total Render:</span>
-                        <span class="metric-value" id="maxRender">0 ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Std Deviation (Render):</span>
-                        <span class="metric-value" id="stdDev">0 ms</span>
-                    </div>
-                    <div class="metric-row">
                         <span class="metric-label">Test Duration:</span>
                         <span class="metric-value" id="testDuration">0 s</span>
                     </div>
-                    <div class="metric-row" style="border-top: 2px solid #b3d9ff; margin-top: 10px; padding-top: 10px;">
+                    <div class="metric-row">
                         <span class="metric-label">Mouse Updates:</span>
                         <span class="metric-value" id="mouseUpdates">0</span>
                     </div>
@@ -475,17 +451,29 @@
                         <span class="metric-value" id="avgUpdateInterval">0 ms</span>
                     </div>
                     <div class="metric-row">
+                        <span class="metric-label">Min Update Interval:</span>
+                        <span class="metric-value" id="minUpdateInterval">0 ms</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Max Update Interval:</span>
+                        <span class="metric-value" id="maxUpdateInterval">0 ms</span>
+                    </div>
+                    <div class="metric-row">
                         <span class="metric-label">Update Rate:</span>
                         <span class="metric-value" id="updateRate">0 Hz</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Interval Std Dev:</span>
+                        <span class="metric-value" id="intervalStdDev">0 ms</span>
                     </div>
                 </div>
             </div>
         </div>
 
         <div class="performance-chart" style="max-width: 900px; margin: 30px auto;">
-            <div class="chart-title">📊 Response Time Distribution</div>
+            <div class="chart-title">📊 Mouse Update Interval Distribution</div>
             <div class="chart-item">
-                <h4 style="text-align: center; color: #495057; margin-bottom: 10px;">Recent Response Times (Last 20 Events)</h4>
+                <h4 style="text-align: center; color: #495057; margin-bottom: 10px;">Recent Update Intervals (Last 50 Updates)</h4>
                 <canvas id="responseChart" style="width: 100%; height: 200px;"></canvas>
                 <div id="chartPlaceholder" style="height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6c757d;">
                     Start the test to see response time visualization
@@ -494,19 +482,19 @@
         </div>
 
         <div class="comparison-summary" style="max-width: 900px; margin: 30px auto;">
-            <div class="summary-title">📈 Test Summary</div>
+            <div class="summary-title">📈 Mouse Detection Summary</div>
             <div class="summary-grid">
                 <div class="summary-card">
-                    <h3>Average Response</h3>
+                    <h3>Detection Rate</h3>
+                    <div class="value" id="summaryRate">0 Hz</div>
+                </div>
+                <div class="summary-card">
+                    <h3>Avg Delay</h3>
                     <div class="value" id="summaryAvg">0 ms</div>
                 </div>
                 <div class="summary-card">
-                    <h3>Response Range</h3>
+                    <h3>Consistency</h3>
                     <div class="value" id="summaryRange">0 ms</div>
-                </div>
-                <div class="summary-card">
-                    <h3>Events Per Second</h3>
-                    <div class="value" id="summaryRate">0</div>
                 </div>
             </div>
         </div>
@@ -570,7 +558,6 @@
             document.getElementById('testStatus').classList.add('status-inactive');
             document.getElementById('stopTestBtn').disabled = true;
             
-            updateMetrics();
             updateMouseMetrics();
             updateChart();
             updateSummary();
@@ -591,49 +578,32 @@
             
             if (testData.mouseUpdateIntervals.length === 0) {
                 document.getElementById('avgUpdateInterval').textContent = '0 ms';
+                document.getElementById('minUpdateInterval').textContent = '0 ms';
+                document.getElementById('maxUpdateInterval').textContent = '0 ms';
                 document.getElementById('updateRate').textContent = '0 Hz';
+                document.getElementById('intervalStdDev').textContent = '0 ms';
                 return;
             }
             
             const avgInterval = testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length;
+            const minInterval = Math.min(...testData.mouseUpdateIntervals);
+            const maxInterval = Math.max(...testData.mouseUpdateIntervals);
             const updateRate = avgInterval > 0 ? (1000 / avgInterval).toFixed(0) : 0;
             
-            document.getElementById('avgUpdateInterval').textContent = avgInterval.toFixed(2) + ' ms';
-            document.getElementById('updateRate').textContent = updateRate + ' Hz';
-        }
-
-        function updateMetrics() {
-            document.getElementById('hoverCount').textContent = testData.hoverCount;
-            
-            if (testData.responseTimes.length === 0) {
-                document.getElementById('avgResponse').textContent = '0 ms';
-                document.getElementById('avgPaint').textContent = '0 ms';
-                document.getElementById('avgRender').textContent = '0 ms';
-                document.getElementById('maxRender').textContent = '0 ms';
-                document.getElementById('stdDev').textContent = '0 ms';
-                return;
-            }
-            
-            const avgResponse = testData.responseTimes.reduce((a, b) => a + b, 0) / testData.responseTimes.length;
-            const avgPaint = testData.paintTimes.length > 0 ? testData.paintTimes.reduce((a, b) => a + b, 0) / testData.paintTimes.length : 0;
-            const avgRender = testData.totalRenderTimes.length > 0 ? testData.totalRenderTimes.reduce((a, b) => a + b, 0) / testData.totalRenderTimes.length : 0;
-            const maxRender = testData.totalRenderTimes.length > 0 ? Math.max(...testData.totalRenderTimes) : 0;
-            
-            const variance = testData.totalRenderTimes.length > 0 ? 
-                testData.totalRenderTimes.reduce((sum, val) => sum + Math.pow(val - avgRender, 2), 0) / testData.totalRenderTimes.length : 0;
+            const variance = testData.mouseUpdateIntervals.reduce((sum, val) => sum + Math.pow(val - avgInterval, 2), 0) / testData.mouseUpdateIntervals.length;
             const stdDev = Math.sqrt(variance);
             
-            document.getElementById('avgResponse').textContent = avgResponse.toFixed(2) + ' ms';
-            document.getElementById('avgPaint').textContent = avgPaint.toFixed(2) + ' ms';
-            document.getElementById('avgRender').textContent = avgRender.toFixed(2) + ' ms';
-            document.getElementById('maxRender').textContent = maxRender.toFixed(2) + ' ms';
-            document.getElementById('stdDev').textContent = stdDev.toFixed(2) + ' ms';
+            document.getElementById('avgUpdateInterval').textContent = avgInterval.toFixed(2) + ' ms';
+            document.getElementById('minUpdateInterval').textContent = minInterval.toFixed(2) + ' ms';
+            document.getElementById('maxUpdateInterval').textContent = maxInterval.toFixed(2) + ' ms';
+            document.getElementById('updateRate').textContent = updateRate + ' Hz';
+            document.getElementById('intervalStdDev').textContent = stdDev.toFixed(2) + ' ms';
         }
 
         function updateChart() {
             const chartPlaceholder = document.getElementById('chartPlaceholder');
             
-            if (testData.totalRenderTimes.length === 0) {
+            if (testData.mouseUpdateIntervals.length === 0) {
                 chartPlaceholder.style.display = 'flex';
                 return;
             }
@@ -647,8 +617,8 @@
             canvas.width = canvas.offsetWidth;
             canvas.height = 200;
             
-            // Get last 20 render times (more accurate than response times)
-            const recentTimes = testData.totalRenderTimes.slice(-20);
+            // Get last 50 update intervals
+            const recentTimes = testData.mouseUpdateIntervals.slice(-50);
             const maxVal = Math.max(...recentTimes, 10);
             
             // Clear canvas
@@ -690,24 +660,21 @@
         }
 
         function updateSummary() {
-            if (testData.totalRenderTimes.length === 0) {
+            if (testData.mouseUpdateIntervals.length === 0) {
                 document.getElementById('summaryAvg').textContent = '0 ms';
                 document.getElementById('summaryRange').textContent = '0 ms';
-                document.getElementById('summaryRate').textContent = '0';
+                document.getElementById('summaryRate').textContent = '0 Hz';
                 return;
             }
             
-            const avg = testData.totalRenderTimes.reduce((a, b) => a + b, 0) / testData.totalRenderTimes.length;
-            const min = Math.min(...testData.totalRenderTimes);
-            const max = Math.max(...testData.totalRenderTimes);
-            const range = max - min;
-            
-            const duration = testData.startTime ? (Date.now() - testData.startTime) / 1000 : 1;
-            const rate = (testData.hoverCount / duration).toFixed(1);
+            const avg = testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length;
+            const variance = testData.mouseUpdateIntervals.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / testData.mouseUpdateIntervals.length;
+            const stdDev = Math.sqrt(variance);
+            const rate = avg > 0 ? (1000 / avg).toFixed(0) : 0;
             
             document.getElementById('summaryAvg').textContent = avg.toFixed(2) + ' ms';
-            document.getElementById('summaryRange').textContent = range.toFixed(2) + ' ms';
-            document.getElementById('summaryRate').textContent = rate;
+            document.getElementById('summaryRange').textContent = stdDev.toFixed(2) + ' ms';
+            document.getElementById('summaryRate').textContent = rate + ' Hz';
         }
 
         function handleMouseEnter(event) {
@@ -738,10 +705,6 @@
                             testData.totalRenderTimes.push(totalRenderTime);
                             
                             testData.hoverCount++;
-                            
-                            updateMetrics();
-                            updateChart();
-                            updateSummary();
                         });
                     });
                 }
@@ -779,13 +742,12 @@
                 return;
             }
             
-            const avgResponse = testData.responseTimes.reduce((a, b) => a + b, 0) / testData.responseTimes.length;
-            const avgPaint = testData.paintTimes.length > 0 ? testData.paintTimes.reduce((a, b) => a + b, 0) / testData.paintTimes.length : 0;
-            const avgRender = testData.totalRenderTimes.reduce((a, b) => a + b, 0) / testData.totalRenderTimes.length;
-            const minRender = Math.min(...testData.totalRenderTimes);
-            const maxRender = Math.max(...testData.totalRenderTimes);
-            const variance = testData.totalRenderTimes.reduce((sum, val) => sum + Math.pow(val - avgRender, 2), 0) / testData.totalRenderTimes.length;
+            const avgInterval = testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length;
+            const minInterval = Math.min(...testData.mouseUpdateIntervals);
+            const maxInterval = Math.max(...testData.mouseUpdateIntervals);
+            const variance = testData.mouseUpdateIntervals.reduce((sum, val) => sum + Math.pow(val - avgInterval, 2), 0) / testData.mouseUpdateIntervals.length;
             const stdDev = Math.sqrt(variance);
+            const updateRate = avgInterval > 0 ? (1000 / avgInterval).toFixed(0) : 0;
             
             const duration = testData.startTime ? (Date.now() - testData.startTime) / 1000 : 0;
             
@@ -793,26 +755,13 @@
                 timestamp: new Date().toISOString(),
                 sessionLabel: testData.sessionLabel,
                 testDuration: duration.toFixed(2) + ' seconds',
-                hoverCount: testData.hoverCount,
-                eventsPerSecond: (testData.hoverCount / duration).toFixed(2),
-                metrics: {
-                    avgEventResponseTime: avgResponse.toFixed(2) + ' ms',
-                    avgPaintTime: avgPaint.toFixed(2) + ' ms',
-                    avgTotalRenderTime: avgRender.toFixed(2) + ' ms',
-                    minTotalRenderTime: minRender.toFixed(2) + ' ms',
-                    maxTotalRenderTime: maxRender.toFixed(2) + ' ms',
-                    stdDeviation: stdDev.toFixed(2) + ' ms',
-                    range: (maxRender - minRender).toFixed(2) + ' ms'
-                },
-                allResponseTimes: testData.responseTimes,
-                allPaintTimes: testData.paintTimes,
-                allTotalRenderTimes: testData.totalRenderTimes,
-                mouseInputMetrics: {
+                mouseDetectionMetrics: {
                     totalMouseUpdates: testData.mouseMoveCount,
-                    avgUpdateInterval: testData.mouseUpdateIntervals.length > 0 ? 
-                        (testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length).toFixed(2) + ' ms' : '0 ms',
-                    updateRate: testData.mouseUpdateIntervals.length > 0 ? 
-                        (1000 / (testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length)).toFixed(0) + ' Hz' : '0 Hz',
+                    avgUpdateInterval: avgInterval.toFixed(2) + ' ms',
+                    minUpdateInterval: minInterval.toFixed(2) + ' ms',
+                    maxUpdateInterval: maxInterval.toFixed(2) + ' ms',
+                    stdDeviation: stdDev.toFixed(2) + ' ms',
+                    updateRate: updateRate + ' Hz',
                     allUpdateIntervals: testData.mouseUpdateIntervals
                 },
                 environment: {
