@@ -466,6 +466,18 @@
                         <span class="metric-label">Test Duration:</span>
                         <span class="metric-value" id="testDuration">0 s</span>
                     </div>
+                    <div class="metric-row" style="border-top: 2px solid #b3d9ff; margin-top: 10px; padding-top: 10px;">
+                        <span class="metric-label">Mouse Updates:</span>
+                        <span class="metric-value" id="mouseUpdates">0</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Avg Update Interval:</span>
+                        <span class="metric-value" id="avgUpdateInterval">0 ms</span>
+                    </div>
+                    <div class="metric-row">
+                        <span class="metric-label">Update Rate:</span>
+                        <span class="metric-value" id="updateRate">0 Hz</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -512,7 +524,9 @@
             startTime: null,
             sessionLabel: 'Test Session',
             mousePositions: [],
-            lastMouseTime: null
+            lastMouseTime: null,
+            mouseUpdateIntervals: [],
+            mouseMoveCount: 0
         };
 
         function applyConfig() {
@@ -548,12 +562,16 @@
             testData.hoverCount = 0;
             testData.lastEnterTime = null;
             testData.startTime = null;
+            testData.mouseUpdateIntervals = [];
+            testData.mouseMoveCount = 0;
+            testData.lastMouseTime = null;
             
             document.getElementById('testStatus').classList.remove('status-active');
             document.getElementById('testStatus').classList.add('status-inactive');
             document.getElementById('stopTestBtn').disabled = true;
             
             updateMetrics();
+            updateMouseMetrics();
             updateChart();
             updateSummary();
         }
@@ -566,6 +584,22 @@
             } else {
                 document.getElementById('testDuration').textContent = '0 s';
             }
+        }
+
+        function updateMouseMetrics() {
+            document.getElementById('mouseUpdates').textContent = testData.mouseMoveCount;
+            
+            if (testData.mouseUpdateIntervals.length === 0) {
+                document.getElementById('avgUpdateInterval').textContent = '0 ms';
+                document.getElementById('updateRate').textContent = '0 Hz';
+                return;
+            }
+            
+            const avgInterval = testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length;
+            const updateRate = avgInterval > 0 ? (1000 / avgInterval).toFixed(0) : 0;
+            
+            document.getElementById('avgUpdateInterval').textContent = avgInterval.toFixed(2) + ' ms';
+            document.getElementById('updateRate').textContent = updateRate + ' Hz';
         }
 
         function updateMetrics() {
@@ -719,6 +753,26 @@
             element.addEventListener('mouseenter', handleMouseEnter);
         });
 
+        // Track mouse movement to measure input detection lag
+        document.querySelector('.test-panel').addEventListener('mousemove', function(event) {
+            if (!testData.active) return;
+            
+            const currentTime = performance.now();
+            
+            if (testData.lastMouseTime !== null) {
+                const interval = currentTime - testData.lastMouseTime;
+                testData.mouseUpdateIntervals.push(interval);
+            }
+            
+            testData.lastMouseTime = currentTime;
+            testData.mouseMoveCount++;
+            
+            // Update mouse metrics every 10 events to avoid too frequent updates
+            if (testData.mouseMoveCount % 10 === 0) {
+                updateMouseMetrics();
+            }
+        });
+
         function exportResults() {
             if (testData.responseTimes.length === 0) {
                 alert('No test data to export. Please run the test first.');
@@ -753,6 +807,14 @@
                 allResponseTimes: testData.responseTimes,
                 allPaintTimes: testData.paintTimes,
                 allTotalRenderTimes: testData.totalRenderTimes,
+                mouseInputMetrics: {
+                    totalMouseUpdates: testData.mouseMoveCount,
+                    avgUpdateInterval: testData.mouseUpdateIntervals.length > 0 ? 
+                        (testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length).toFixed(2) + ' ms' : '0 ms',
+                    updateRate: testData.mouseUpdateIntervals.length > 0 ? 
+                        (1000 / (testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length)).toFixed(0) + ' Hz' : '0 Hz',
+                    allUpdateIntervals: testData.mouseUpdateIntervals
+                },
                 environment: {
                     userAgent: navigator.userAgent,
                     platform: navigator.platform,
