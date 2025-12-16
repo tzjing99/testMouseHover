@@ -87,79 +87,55 @@
             left: 20px;
             right: 20px;
             bottom: 20px;
-            background: white;
+            background: #1a1a1a;
             border-radius: 10px;
             box-shadow: 0 10px 40px rgba(0,0,0,0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
             overflow: hidden;
         }
 
-        .button-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 200px);
-            gap: 30px;
-        }
-
-        .test-button {
-            width: 200px;
-            height: 120px;
-            background: #ecf0f1;
-            border: 3px solid #bdc3c7;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            font-weight: 600;
-            color: #2c3e50;
-            cursor: pointer;
-            transition: all 0.2s;
+        .canvas-container {
+            width: 100%;
+            height: 100%;
             position: relative;
         }
 
-        .test-button:hover {
-            background: #3498db;
-            color: white;
-            border-color: #2980b9;
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.5);
+        #traceCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
 
-        .test-button::after {
-            content: '';
+        .trail-dot {
             position: absolute;
-            top: 5px;
-            right: 5px;
-            width: 12px;
-            height: 12px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
-            background: #95a5a6;
+            pointer-events: none;
+            opacity: 0.6;
         }
 
-        .test-button.detected::after {
-            background: #f39c12;
-            animation: pulse 0.3s ease-out;
+        .trail-dot.actual {
+            background: #e74c3c;
+            box-shadow: 0 0 10px rgba(231, 76, 60, 0.8);
         }
 
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.5); box-shadow: 0 0 10px #f39c12; }
-            100% { transform: scale(1); }
+        .trail-dot.detected {
+            background: #27ae60;
+            box-shadow: 0 0 10px rgba(39, 174, 96, 0.8);
         }
 
         /* Custom cursor - shows actual mouse position */
         .cursor-indicator {
             position: fixed;
-            width: 20px;
-            height: 20px;
+            width: 24px;
+            height: 24px;
             border: 3px solid #e74c3c;
             border-radius: 50%;
             pointer-events: none;
             z-index: 10000;
             transform: translate(-50%, -50%);
             transition: none;
+            box-shadow: 0 0 15px rgba(231, 76, 60, 0.8), inset 0 0 5px rgba(231, 76, 60, 0.5);
         }
 
         .cursor-indicator::before {
@@ -168,43 +144,41 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             background: #e74c3c;
             border-radius: 50%;
+            box-shadow: 0 0 10px #e74c3c;
         }
 
         /* Timestamp display */
         .cursor-indicator::after {
             content: attr(data-time);
             position: absolute;
-            top: -30px;
-            left: 25px;
-            background: #e74c3c;
+            top: -35px;
+            left: 30px;
+            background: rgba(231, 76, 60, 0.95);
             color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 700;
             white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
         /* Detected cursor - shows where system thinks mouse is */
         .detected-cursor {
             position: fixed;
-            width: 24px;
-            height: 24px;
+            width: 28px;
+            height: 28px;
             border: 3px solid #27ae60;
             border-radius: 50%;
             pointer-events: none;
             z-index: 9999;
             transform: translate(-50%, -50%);
-            opacity: 0;
-            transition: opacity 0.1s;
-        }
-
-        .detected-cursor.active {
-            opacity: 1;
+            transition: all 0.15s ease-out;
+            box-shadow: 0 0 20px rgba(39, 174, 96, 0.8), inset 0 0 5px rgba(39, 174, 96, 0.5);
         }
 
         .detected-cursor::before {
@@ -213,24 +187,26 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             background: #27ae60;
             border-radius: 50%;
+            box-shadow: 0 0 15px #27ae60;
         }
 
         .detected-cursor::after {
             content: attr(data-time);
             position: absolute;
-            top: -30px;
-            left: 25px;
-            background: #27ae60;
+            top: -35px;
+            left: 30px;
+            background: rgba(39, 174, 96, 0.95);
             color: white;
-            padding: 3px 8px;
-            border-radius: 3px;
-            font-size: 11px;
-            font-weight: 600;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-size: 12px;
+            font-weight: 700;
             white-space: nowrap;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.5);
         }
 
         .metrics-panel {
@@ -347,16 +323,8 @@
     </div>
 
     <div class="test-area">
-        <div class="button-grid">
-            <div class="test-button">Button 1</div>
-            <div class="test-button">Button 2</div>
-            <div class="test-button">Button 3</div>
-            <div class="test-button">Button 4</div>
-            <div class="test-button">Button 5</div>
-            <div class="test-button">Button 6</div>
-            <div class="test-button">Button 7</div>
-            <div class="test-button">Button 8</div>
-            <div class="test-button">Button 9</div>
+        <div class="canvas-container">
+            <canvas id="traceCanvas"></canvas>
         </div>
     </div>
 
@@ -367,19 +335,19 @@
             <span class="metric-value" id="duration">0 s</span>
         </div>
         <div class="metric-item">
-            <span class="metric-label">Mouse Moves:</span>
+            <span class="metric-label">Actual Moves:</span>
             <span class="metric-value" id="mouseMoves">0</span>
         </div>
         <div class="metric-item">
-            <span class="metric-label">Button Detections:</span>
+            <span class="metric-label">Detected Moves:</span>
             <span class="metric-value" id="detections">0</span>
         </div>
         <div class="metric-item">
-            <span class="metric-label">Avg Detection Delay:</span>
+            <span class="metric-label">Avg Lag:</span>
             <span class="metric-value" id="avgDelay">0 ms</span>
         </div>
         <div class="metric-item">
-            <span class="metric-label">Max Detection Delay:</span>
+            <span class="metric-label">Max Lag:</span>
             <span class="metric-value" id="maxDelay">0 ms</span>
         </div>
     </div>
@@ -395,10 +363,27 @@
             detections: 0,
             detectionDelays: [],
             lastMoveTime: null,
-            sessionLabel: 'Test Session'
+            sessionLabel: 'Test Session',
+            actualTrail: [],
+            detectedTrail: []
         };
 
         let durationInterval = null;
+        let canvas, ctx;
+
+        // Initialize canvas
+        window.addEventListener('load', function() {
+            canvas = document.getElementById('traceCanvas');
+            ctx = canvas.getContext('2d');
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        });
+
+        function resizeCanvas() {
+            const container = canvas.parentElement;
+            canvas.width = container.clientWidth;
+            canvas.height = container.clientHeight;
+        }
 
         function startTest() {
             testData.active = true;
@@ -406,7 +391,14 @@
             testData.mouseMoves = 0;
             testData.detections = 0;
             testData.detectionDelays = [];
+            testData.actualTrail = [];
+            testData.detectedTrail = [];
             testData.sessionLabel = document.getElementById('sessionLabel').value;
+
+            // Clear canvas
+            if (ctx) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            }
 
             document.getElementById('stopBtn').disabled = false;
             document.getElementById('statusIndicator').classList.add('active');
@@ -440,10 +432,8 @@
             }
         }
 
-        // Track actual cursor position
+        // Track actual cursor position and draw trail
         document.addEventListener('mousemove', function(e) {
-            if (!testData.active) return;
-
             const cursorIndicator = document.getElementById('cursorIndicator');
             cursorIndicator.style.left = e.clientX + 'px';
             cursorIndicator.style.top = e.clientY + 'px';
@@ -451,23 +441,43 @@
             const currentTime = performance.now();
             cursorIndicator.setAttribute('data-time', currentTime.toFixed(0) + 'ms');
 
+            if (!testData.active) return;
+
             testData.mouseMoves++;
             testData.lastMoveTime = currentTime;
+
+            // Get position relative to canvas
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            // Add to actual trail
+            testData.actualTrail.push({x, y, time: currentTime});
+
+            // Keep trail limited to last 100 points
+            if (testData.actualTrail.length > 100) {
+                testData.actualTrail.shift();
+            }
+
+            drawTrail();
         });
 
-        // Track detected hover on buttons
-        document.querySelectorAll('.test-button').forEach(button => {
-            button.addEventListener('mouseenter', function(e) {
-                if (!testData.active) return;
+        // Simulate detected movement with slight delay
+        let detectedMoveInterval;
+        document.querySelector('.test-area').addEventListener('mouseenter', function() {
+            if (detectedMoveInterval) clearInterval(detectedMoveInterval);
+            
+            detectedMoveInterval = setInterval(function() {
+                if (!testData.active || testData.actualTrail.length === 0) return;
 
                 const detectedCursor = document.getElementById('detectedCursor');
-                const rect = button.getBoundingClientRect();
-                const centerX = rect.left + rect.width / 2;
-                const centerY = rect.top + rect.height / 2;
-
-                detectedCursor.style.left = centerX + 'px';
-                detectedCursor.style.top = centerY + 'px';
-                detectedCursor.classList.add('active');
+                
+                // Simulate system detecting position with delay
+                const latestActual = testData.actualTrail[testData.actualTrail.length - 1];
+                const rect = canvas.getBoundingClientRect();
+                
+                detectedCursor.style.left = (rect.left + latestActual.x) + 'px';
+                detectedCursor.style.top = (rect.top + latestActual.y) + 'px';
 
                 const detectionTime = performance.now();
                 detectedCursor.setAttribute('data-time', detectionTime.toFixed(0) + 'ms');
@@ -475,19 +485,61 @@
                 // Calculate delay
                 if (testData.lastMoveTime) {
                     const delay = detectionTime - testData.lastMoveTime;
-                    testData.detectionDelays.push(delay);
+                    if (delay > 0) {
+                        testData.detectionDelays.push(delay);
+                    }
                 }
 
-                button.classList.add('detected');
+                // Add to detected trail
+                testData.detectedTrail.push({x: latestActual.x, y: latestActual.y, time: detectionTime});
+                
+                if (testData.detectedTrail.length > 100) {
+                    testData.detectedTrail.shift();
+                }
+
                 testData.detections++;
                 updateMetrics();
-
-                setTimeout(() => {
-                    button.classList.remove('detected');
-                    detectedCursor.classList.remove('active');
-                }, 500);
-            });
+                drawTrail();
+            }, 50); // Update detection every 50ms
         });
+
+        function drawTrail() {
+            if (!ctx) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw actual trail (red)
+            ctx.strokeStyle = 'rgba(231, 76, 60, 0.6)';
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.shadowBlur = 10;
+            ctx.shadowColor = 'rgba(231, 76, 60, 0.8)';
+
+            if (testData.actualTrail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(testData.actualTrail[0].x, testData.actualTrail[0].y);
+                for (let i = 1; i < testData.actualTrail.length; i++) {
+                    ctx.lineTo(testData.actualTrail[i].x, testData.actualTrail[i].y);
+                }
+                ctx.stroke();
+            }
+
+            // Draw detected trail (green)
+            ctx.strokeStyle = 'rgba(39, 174, 96, 0.6)';
+            ctx.shadowColor = 'rgba(39, 174, 96, 0.8)';
+
+            if (testData.detectedTrail.length > 1) {
+                ctx.beginPath();
+                ctx.moveTo(testData.detectedTrail[0].x, testData.detectedTrail[0].y);
+                for (let i = 1; i < testData.detectedTrail.length; i++) {
+                    ctx.lineTo(testData.detectedTrail[i].x, testData.detectedTrail[i].y);
+                }
+                ctx.stroke();
+            }
+
+            ctx.shadowBlur = 0;
+        }
 
         function exportResults() {
             const duration = testData.startTime ? ((Date.now() - testData.startTime) / 1000).toFixed(2) : 0;
@@ -512,6 +564,10 @@
                     minDetectionDelay: minDelay + ' ms',
                     maxDetectionDelay: maxDelay + ' ms',
                     allDelays: testData.detectionDelays
+                },
+                trailData: {
+                    actualTrailPoints: testData.actualTrail.length,
+                    detectedTrailPoints: testData.detectedTrail.length
                 },
                 environment: {
                     userAgent: navigator.userAgent,
