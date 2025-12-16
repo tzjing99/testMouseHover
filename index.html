@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mouse Hover Performance Comparison Tool</title>
+    <title>Mouse Input Lag Visual Indicator</title>
     <style>
         * {
             margin: 0;
@@ -13,67 +13,35 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            padding: 20px;
-            min-height: 100vh;
+            background: #2c3e50;
+            overflow: hidden;
+            cursor: none;
         }
 
-        .container {
-            max-width: 1400px;
-            margin: 0 auto;
-            background: white;
-            border-radius: 15px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-
-        h1 {
-            text-align: center;
-            color: #333;
-            margin-bottom: 10px;
-            font-size: 2em;
-        }
-
-        .subtitle {
-            text-align: center;
-            color: #666;
-            margin-bottom: 30px;
-            font-size: 0.9em;
-        }
-
-        .config-panel {
-            background: #f8f9fa;
-            padding: 20px;
-            border-radius: 10px;
-            margin-bottom: 30px;
-            border: 2px solid #e9ecef;
-        }
-
-        .config-row {
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: rgba(44, 62, 80, 0.95);
+            padding: 15px 30px;
+            border-bottom: 2px solid #3498db;
+            z-index: 1000;
             display: flex;
-            gap: 20px;
-            margin-bottom: 15px;
-            flex-wrap: wrap;
+            justify-content: space-between;
             align-items: center;
         }
 
-        .config-item {
+        .header h1 {
+            color: #ecf0f1;
+            font-size: 1.5em;
+            margin: 0;
+        }
+
+        .controls {
             display: flex;
+            gap: 15px;
             align-items: center;
-            gap: 10px;
-        }
-
-        .config-item label {
-            font-weight: 600;
-            color: #495057;
-            min-width: 120px;
-        }
-
-        .config-item input, .config-item select {
-            padding: 8px 12px;
-            border: 2px solid #dee2e6;
-            border-radius: 5px;
-            font-size: 14px;
         }
 
         .btn {
@@ -86,683 +54,464 @@
             transition: all 0.3s;
         }
 
-        .btn-primary {
-            background: #667eea;
+        .btn-start {
+            background: #27ae60;
             color: white;
         }
 
-        .btn-primary:hover {
-            background: #5568d3;
-            transform: translateY(-2px);
+        .btn-start:hover {
+            background: #229954;
         }
 
-        .btn-secondary {
-            background: #6c757d;
+        .btn-stop {
+            background: #e74c3c;
             color: white;
         }
 
-        .btn-secondary:hover {
-            background: #5a6268;
+        .btn-stop:hover {
+            background: #c0392b;
         }
 
-        .btn-success {
-            background: #28a745;
+        .btn-export {
+            background: #3498db;
             color: white;
         }
 
-        .comparison-area {
-            margin-bottom: 30px;
+        .btn-export:hover {
+            background: #2980b9;
         }
 
-        .test-panel {
-            border: 3px solid #dee2e6;
-            border-radius: 10px;
-            padding: 20px;
-            background: #ffffff;
-        }
-
-        .test-panel h2 {
-            color: #495057;
-            margin-bottom: 15px;
-            font-size: 1.3em;
-            text-align: center;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e9ecef;
-        }
-
-        .test-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-
-        .hover-element {
-            padding: 20px;
-            border: 2px solid #ced4da;
-            border-radius: 8px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.1s;
+        .test-area {
+            position: fixed;
+            top: 80px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
             background: white;
-            position: relative;
-            min-height: 80px;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
             display: flex;
             align-items: center;
             justify-content: center;
-            font-weight: 500;
+            overflow: hidden;
         }
 
-        .hover-element:hover {
-            background: #667eea;
-            color: white;
-            border-color: #667eea;
-            transform: scale(1.05);
-            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        .button-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 200px);
+            gap: 30px;
         }
 
-        .menu-bar {
+        .test-button {
+            width: 200px;
+            height: 120px;
+            background: #ecf0f1;
+            border: 3px solid #bdc3c7;
+            border-radius: 10px;
             display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-            background: #f8f9fa;
-            padding: 10px;
-            border-radius: 8px;
-        }
-
-        .menu-item {
-            padding: 12px 20px;
-            background: white;
-            border: 2px solid #dee2e6;
-            border-radius: 5px;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: 600;
+            color: #2c3e50;
             cursor: pointer;
-            transition: all 0.1s;
-            font-weight: 500;
+            transition: all 0.2s;
+            position: relative;
         }
 
-        .menu-item:hover {
-            background: #764ba2;
+        .test-button:hover {
+            background: #3498db;
             color: white;
-            border-color: #764ba2;
+            border-color: #2980b9;
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(52, 152, 219, 0.5);
         }
 
-        .metrics-display {
-            background: #e7f3ff;
-            padding: 15px;
-            border-radius: 8px;
-            margin-top: 15px;
-            border: 2px solid #b3d9ff;
+        .test-button::after {
+            content: '';
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #95a5a6;
         }
 
-        .metric-row {
+        .test-button.detected::after {
+            background: #f39c12;
+            animation: pulse 0.3s ease-out;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.5); box-shadow: 0 0 10px #f39c12; }
+            100% { transform: scale(1); }
+        }
+
+        /* Custom cursor - shows actual mouse position */
+        .cursor-indicator {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #e74c3c;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 10000;
+            transform: translate(-50%, -50%);
+            transition: none;
+        }
+
+        .cursor-indicator::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 6px;
+            height: 6px;
+            background: #e74c3c;
+            border-radius: 50%;
+        }
+
+        /* Timestamp display */
+        .cursor-indicator::after {
+            content: attr(data-time);
+            position: absolute;
+            top: -30px;
+            left: 25px;
+            background: #e74c3c;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        /* Detected cursor - shows where system thinks mouse is */
+        .detected-cursor {
+            position: fixed;
+            width: 24px;
+            height: 24px;
+            border: 3px solid #27ae60;
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .detected-cursor.active {
+            opacity: 1;
+        }
+
+        .detected-cursor::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: #27ae60;
+            border-radius: 50%;
+        }
+
+        .detected-cursor::after {
+            content: attr(data-time);
+            position: absolute;
+            top: -30px;
+            left: 25px;
+            background: #27ae60;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            white-space: nowrap;
+        }
+
+        .metrics-panel {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(44, 62, 80, 0.95);
+            padding: 20px;
+            border-radius: 10px;
+            color: white;
+            min-width: 300px;
+            z-index: 1000;
+        }
+
+        .metric-item {
             display: flex;
             justify-content: space-between;
             padding: 8px 0;
-            border-bottom: 1px solid #cce5ff;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
         }
 
-        .metric-row:last-child {
+        .metric-item:last-child {
             border-bottom: none;
         }
 
         .metric-label {
             font-weight: 600;
-            color: #004085;
         }
 
         .metric-value {
-            color: #0056b3;
             font-family: 'Courier New', monospace;
-            font-weight: 600;
+            color: #3498db;
         }
 
-        .performance-chart {
-            margin-top: 30px;
-            padding: 20px;
-            background: #f8f9fa;
-            border-radius: 10px;
-            border: 2px solid #dee2e6;
-        }
-
-        .chart-title {
-            font-size: 1.2em;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .chart-container {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 20px;
-        }
-
-        .chart-item {
-            background: white;
+        .legend {
+            position: fixed;
+            top: 80px;
+            right: 20px;
+            background: rgba(44, 62, 80, 0.95);
             padding: 15px;
-            border-radius: 8px;
-            border: 2px solid #dee2e6;
+            border-radius: 10px;
+            color: white;
+            z-index: 1000;
         }
 
-        .bar-chart {
+        .legend-item {
             display: flex;
-            align-items: flex-end;
-            height: 150px;
-            gap: 5px;
-            margin-top: 10px;
-        }
-
-        .bar {
-            flex: 1;
-            background: linear-gradient(to top, #667eea, #764ba2);
-            border-radius: 4px 4px 0 0;
-            position: relative;
-            min-height: 5px;
-            transition: height 0.3s;
-        }
-
-        .bar-label {
-            position: absolute;
-            top: -20px;
-            left: 50%;
-            transform: translateX(-50%);
-            font-size: 11px;
-            font-weight: 600;
-            color: #495057;
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .status-active {
-            background: #28a745;
-            box-shadow: 0 0 10px #28a745;
-        }
-
-        .status-inactive {
-            background: #6c757d;
-        }
-
-        .comparison-summary {
-            margin-top: 30px;
-            padding: 20px;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
-            border-radius: 10px;
-            border: 3px solid #dee2e6;
-        }
-
-        .summary-title {
-            font-size: 1.4em;
-            font-weight: 600;
-            color: #495057;
-            margin-bottom: 15px;
-            text-align: center;
-        }
-
-        .summary-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-
-        .summary-card {
-            background: white;
-            padding: 15px;
-            border-radius: 8px;
-            text-align: center;
-            border: 2px solid #dee2e6;
-        }
-
-        .summary-card h3 {
-            color: #6c757d;
-            font-size: 0.9em;
+            align-items: center;
+            gap: 10px;
             margin-bottom: 10px;
         }
 
-        .summary-card .value {
-            font-size: 1.8em;
-            font-weight: 700;
-            color: #667eea;
+        .legend-item:last-child {
+            margin-bottom: 0;
         }
 
-        .winner-badge {
-            background: #28a745;
+        .legend-circle {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 2px solid;
+        }
+
+        .legend-circle.red {
+            border-color: #e74c3c;
+        }
+
+        .legend-circle.green {
+            border-color: #27ae60;
+        }
+
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: #27ae60;
             color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.8em;
-            margin-top: 5px;
-            display: inline-block;
+            padding: 10px 30px;
+            border-radius: 25px;
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 1001;
+            display: none;
         }
 
-        .loser-badge {
-            background: #dc3545;
-            color: white;
-            padding: 5px 10px;
-            border-radius: 5px;
-            font-size: 0.8em;
-            margin-top: 5px;
-            display: inline-block;
-        }
-
-        @media (max-width: 1024px) {
-            .comparison-area {
-                grid-template-columns: 1fr;
-            }
-            
-            .test-grid {
-                grid-template-columns: repeat(2, 1fr);
-            }
-            
-            .summary-grid {
-                grid-template-columns: 1fr;
-            }
-        }
-
-        .help-text {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 20px;
-            color: #856404;
-        }
-
-        .help-text strong {
+        .status-indicator.active {
             display: block;
-            margin-bottom: 5px;
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>🖱️ Mouse Hover Performance Test Tool</h1>
-        <p class="subtitle">Measure hover response times for interactive UI elements</p>
-
-        <div class="help-text">
-            <strong>📋 Instructions:</strong>
-            1. Open this page on the connection you want to test (Original or Enhanced implementation).
-            2. Enter a label to identify this test session.
-            3. Click "Start Test" and move your mouse over the UI elements.
-            4. Export results and repeat on the other connection for comparison.
-        </div>
-
-        <div class="config-panel">
-            <h3 style="margin-bottom: 15px; color: #495057;">⚙️ Configuration</h3>
-            <div class="config-row">
-                <div class="config-item">
-                    <label>Test Session Label:</label>
-                    <input type="text" id="sessionLabel" value="Test Session" placeholder="e.g., Original Implementation" style="width: 300px;" />
-                </div>
-                <div class="config-item">
-                    <label>Simulated Lag (ms):</label>
-                    <input type="number" id="lagValue" value="0" min="0" max="1000" step="10" />
-                </div>
-                <button class="btn btn-secondary" onclick="applyConfig()">Apply Config</button>
-            </div>
-            <div class="config-row">
-                <button class="btn btn-primary" onclick="startTest()">Start Test</button>
-                <button class="btn btn-secondary" onclick="resetTest()">Reset Test</button>
-                <button class="btn btn-success" onclick="exportResults()">Export Results</button>
-            </div>
-        </div>
-
-        <div class="comparison-area" style="display: block;">
-            <!-- Single Test Panel -->
-            <div class="test-panel" style="max-width: 900px; margin: 0 auto;">
-                <h2>
-                    <span class="status-indicator status-inactive" id="testStatus"></span>
-                    <span id="testTitle">Test Session</span>
-                </h2>
-
-                <div class="test-grid">
-                    <div class="hover-element">Button 1</div>
-                    <div class="hover-element">Button 2</div>
-                    <div class="hover-element">Button 3</div>
-                    <div class="hover-element">Button 4</div>
-                    <div class="hover-element">Button 5</div>
-                    <div class="hover-element">Button 6</div>
-                    <div class="hover-element">Button 7</div>
-                    <div class="hover-element">Button 8</div>
-                    <div class="hover-element">Button 9</div>
-                </div>
-
-                <div style="text-align: center; margin-top: 20px;">
-                    <button class="btn btn-secondary" id="stopTestBtn" onclick="stopTest()" disabled style="padding: 15px 40px; font-size: 16px;">⏹️ Stop Test</button>
-                </div>
-
-                <div class="metrics-display">
-                    <div class="metric-row">
-                        <span class="metric-label">Test Duration:</span>
-                        <span class="metric-value" id="testDuration">0 s</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Mouse Updates:</span>
-                        <span class="metric-value" id="mouseUpdates">0</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Avg Update Interval:</span>
-                        <span class="metric-value" id="avgUpdateInterval">0 ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Min Update Interval:</span>
-                        <span class="metric-value" id="minUpdateInterval">0 ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Max Update Interval:</span>
-                        <span class="metric-value" id="maxUpdateInterval">0 ms</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Update Rate:</span>
-                        <span class="metric-value" id="updateRate">0 Hz</span>
-                    </div>
-                    <div class="metric-row">
-                        <span class="metric-label">Interval Std Dev:</span>
-                        <span class="metric-value" id="intervalStdDev">0 ms</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="performance-chart" style="max-width: 900px; margin: 30px auto;">
-            <div class="chart-title">📊 Mouse Update Interval Distribution</div>
-            <div class="chart-item">
-                <h4 style="text-align: center; color: #495057; margin-bottom: 10px;">Recent Update Intervals (Last 50 Updates)</h4>
-                <canvas id="responseChart" style="width: 100%; height: 200px;"></canvas>
-                <div id="chartPlaceholder" style="height: 200px; display: flex; align-items: center; justify-content: center; background: #f8f9fa; border-radius: 8px; color: #6c757d;">
-                    Start the test to see response time visualization
-                </div>
-            </div>
-        </div>
-
-        <div class="comparison-summary" style="max-width: 900px; margin: 30px auto;">
-            <div class="summary-title">📈 Mouse Detection Summary</div>
-            <div class="summary-grid">
-                <div class="summary-card">
-                    <h3>Detection Rate</h3>
-                    <div class="value" id="summaryRate">0 Hz</div>
-                </div>
-                <div class="summary-card">
-                    <h3>Avg Delay</h3>
-                    <div class="value" id="summaryAvg">0 ms</div>
-                </div>
-                <div class="summary-card">
-                    <h3>Consistency</h3>
-                    <div class="value" id="summaryRange">0 ms</div>
-                </div>
-            </div>
+    <div class="header">
+        <h1>🖱️ Mouse Input Lag Visual Indicator</h1>
+        <div class="controls">
+            <input type="text" id="sessionLabel" placeholder="Test Session Name" value="Test Session" style="padding: 10px; border-radius: 5px; border: 2px solid #3498db; cursor: text;">
+            <button class="btn btn-start" onclick="startTest()">▶️ Start Test</button>
+            <button class="btn btn-stop" onclick="stopTest()" disabled id="stopBtn">⏹️ Stop Test</button>
+            <button class="btn btn-export" onclick="exportResults()">💾 Export</button>
         </div>
     </div>
+
+    <div class="status-indicator" id="statusIndicator">🟢 TEST ACTIVE - Move mouse over buttons</div>
+
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-circle red"></div>
+            <span>Actual Cursor Position</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-circle green"></div>
+            <span>Detected Position</span>
+        </div>
+    </div>
+
+    <div class="test-area">
+        <div class="button-grid">
+            <div class="test-button">Button 1</div>
+            <div class="test-button">Button 2</div>
+            <div class="test-button">Button 3</div>
+            <div class="test-button">Button 4</div>
+            <div class="test-button">Button 5</div>
+            <div class="test-button">Button 6</div>
+            <div class="test-button">Button 7</div>
+            <div class="test-button">Button 8</div>
+            <div class="test-button">Button 9</div>
+        </div>
+    </div>
+
+    <div class="metrics-panel">
+        <h3 style="margin-bottom: 15px; border-bottom: 2px solid #3498db; padding-bottom: 10px;">Test Metrics</h3>
+        <div class="metric-item">
+            <span class="metric-label">Duration:</span>
+            <span class="metric-value" id="duration">0 s</span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Mouse Moves:</span>
+            <span class="metric-value" id="mouseMoves">0</span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Button Detections:</span>
+            <span class="metric-value" id="detections">0</span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Avg Detection Delay:</span>
+            <span class="metric-value" id="avgDelay">0 ms</span>
+        </div>
+        <div class="metric-item">
+            <span class="metric-label">Max Detection Delay:</span>
+            <span class="metric-value" id="maxDelay">0 ms</span>
+        </div>
+    </div>
+
+    <div class="cursor-indicator" id="cursorIndicator" data-time="0ms"></div>
+    <div class="detected-cursor" id="detectedCursor" data-time="0ms"></div>
 
     <script>
         const testData = {
             active: false,
-            lag: 0,
-            responseTimes: [],
-            paintTimes: [],
-            totalRenderTimes: [],
-            hoverCount: 0,
-            lastEnterTime: null,
             startTime: null,
-            sessionLabel: 'Test Session',
-            mousePositions: [],
-            lastMouseTime: null,
-            mouseUpdateIntervals: [],
-            mouseMoveCount: 0
+            mouseMoves: 0,
+            detections: 0,
+            detectionDelays: [],
+            lastMoveTime: null,
+            sessionLabel: 'Test Session'
         };
 
-        function applyConfig() {
-            testData.lag = parseInt(document.getElementById('lagValue').value) || 0;
-            testData.sessionLabel = document.getElementById('sessionLabel').value || 'Test Session';
-            document.getElementById('testTitle').textContent = testData.sessionLabel;
-            
-            alert('Configuration applied successfully!');
-        }
+        let durationInterval = null;
 
         function startTest() {
             testData.active = true;
             testData.startTime = Date.now();
-            document.getElementById('testStatus').classList.remove('status-inactive');
-            document.getElementById('testStatus').classList.add('status-active');
-            document.getElementById('stopTestBtn').disabled = false;
-            updateDuration();
+            testData.mouseMoves = 0;
+            testData.detections = 0;
+            testData.detectionDelays = [];
+            testData.sessionLabel = document.getElementById('sessionLabel').value;
+
+            document.getElementById('stopBtn').disabled = false;
+            document.getElementById('statusIndicator').classList.add('active');
+
+            durationInterval = setInterval(updateDuration, 100);
         }
 
         function stopTest() {
             testData.active = false;
-            document.getElementById('testStatus').classList.remove('status-active');
-            document.getElementById('testStatus').classList.add('status-inactive');
-            document.getElementById('stopTestBtn').disabled = true;
-            alert('Test stopped! You can now export the results.');
-        }
-
-        function resetTest() {
-            testData.active = false;
-            testData.responseTimes = [];
-            testData.paintTimes = [];
-            testData.totalRenderTimes = [];
-            testData.hoverCount = 0;
-            testData.lastEnterTime = null;
-            testData.startTime = null;
-            testData.mouseUpdateIntervals = [];
-            testData.mouseMoveCount = 0;
-            testData.lastMouseTime = null;
-            
-            document.getElementById('testStatus').classList.remove('status-active');
-            document.getElementById('testStatus').classList.add('status-inactive');
-            document.getElementById('stopTestBtn').disabled = true;
-            
-            updateMouseMetrics();
-            updateChart();
-            updateSummary();
+            document.getElementById('stopBtn').disabled = true;
+            document.getElementById('statusIndicator').classList.remove('active');
+            clearInterval(durationInterval);
         }
 
         function updateDuration() {
-            if (testData.active && testData.startTime) {
-                const duration = (Date.now() - testData.startTime) / 1000;
-                document.getElementById('testDuration').textContent = duration.toFixed(1) + ' s';
-                setTimeout(updateDuration, 100);
-            } else {
-                document.getElementById('testDuration').textContent = '0 s';
+            if (testData.startTime) {
+                const duration = ((Date.now() - testData.startTime) / 1000).toFixed(1);
+                document.getElementById('duration').textContent = duration + ' s';
             }
         }
 
-        function updateMouseMetrics() {
-            document.getElementById('mouseUpdates').textContent = testData.mouseMoveCount;
-            
-            if (testData.mouseUpdateIntervals.length === 0) {
-                document.getElementById('avgUpdateInterval').textContent = '0 ms';
-                document.getElementById('minUpdateInterval').textContent = '0 ms';
-                document.getElementById('maxUpdateInterval').textContent = '0 ms';
-                document.getElementById('updateRate').textContent = '0 Hz';
-                document.getElementById('intervalStdDev').textContent = '0 ms';
-                return;
+        function updateMetrics() {
+            document.getElementById('mouseMoves').textContent = testData.mouseMoves;
+            document.getElementById('detections').textContent = testData.detections;
+
+            if (testData.detectionDelays.length > 0) {
+                const avg = testData.detectionDelays.reduce((a, b) => a + b, 0) / testData.detectionDelays.length;
+                const max = Math.max(...testData.detectionDelays);
+                document.getElementById('avgDelay').textContent = avg.toFixed(2) + ' ms';
+                document.getElementById('maxDelay').textContent = max.toFixed(2) + ' ms';
             }
-            
-            const avgInterval = testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length;
-            const minInterval = Math.min(...testData.mouseUpdateIntervals);
-            const maxInterval = Math.max(...testData.mouseUpdateIntervals);
-            const updateRate = avgInterval > 0 ? (1000 / avgInterval).toFixed(0) : 0;
-            
-            const variance = testData.mouseUpdateIntervals.reduce((sum, val) => sum + Math.pow(val - avgInterval, 2), 0) / testData.mouseUpdateIntervals.length;
-            const stdDev = Math.sqrt(variance);
-            
-            document.getElementById('avgUpdateInterval').textContent = avgInterval.toFixed(2) + ' ms';
-            document.getElementById('minUpdateInterval').textContent = minInterval.toFixed(2) + ' ms';
-            document.getElementById('maxUpdateInterval').textContent = maxInterval.toFixed(2) + ' ms';
-            document.getElementById('updateRate').textContent = updateRate + ' Hz';
-            document.getElementById('intervalStdDev').textContent = stdDev.toFixed(2) + ' ms';
         }
 
-        function updateChart() {
-            const chartPlaceholder = document.getElementById('chartPlaceholder');
-            
-            if (testData.mouseUpdateIntervals.length === 0) {
-                chartPlaceholder.style.display = 'flex';
-                return;
-            }
-            
-            chartPlaceholder.style.display = 'none';
-            const canvas = document.getElementById('responseChart');
-            canvas.style.display = 'block';
-            const ctx = canvas.getContext('2d');
-            
-            // Set canvas size
-            canvas.width = canvas.offsetWidth;
-            canvas.height = 200;
-            
-            // Get last 50 update intervals
-            const recentTimes = testData.mouseUpdateIntervals.slice(-50);
-            const maxVal = Math.max(...recentTimes, 10);
-            
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            
-            // Draw bars
-            const barWidth = canvas.width / recentTimes.length;
-            const padding = 2;
-            
-            recentTimes.forEach((time, index) => {
-                const barHeight = (time / maxVal) * (canvas.height - 30);
-                const x = index * barWidth;
-                const y = canvas.height - barHeight - 20;
-                
-                // Gradient
-                const gradient = ctx.createLinearGradient(0, y, 0, canvas.height - 20);
-                gradient.addColorStop(0, '#667eea');
-                gradient.addColorStop(1, '#764ba2');
-                
-                ctx.fillStyle = gradient;
-                ctx.fillRect(x + padding, y, barWidth - padding * 2, barHeight);
-                
-                // Value label
-                if (recentTimes.length <= 10) {
-                    ctx.fillStyle = '#495057';
-                    ctx.font = '10px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.fillText(time.toFixed(0), x + barWidth / 2, y - 5);
-                }
-            });
-            
-            // Draw baseline
-            ctx.strokeStyle = '#dee2e6';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            ctx.moveTo(0, canvas.height - 20);
-            ctx.lineTo(canvas.width, canvas.height - 20);
-            ctx.stroke();
-        }
-
-        function updateSummary() {
-            if (testData.mouseUpdateIntervals.length === 0) {
-                document.getElementById('summaryAvg').textContent = '0 ms';
-                document.getElementById('summaryRange').textContent = '0 ms';
-                document.getElementById('summaryRate').textContent = '0 Hz';
-                return;
-            }
-            
-            const avg = testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length;
-            const variance = testData.mouseUpdateIntervals.reduce((sum, val) => sum + Math.pow(val - avg, 2), 0) / testData.mouseUpdateIntervals.length;
-            const stdDev = Math.sqrt(variance);
-            const rate = avg > 0 ? (1000 / avg).toFixed(0) : 0;
-            
-            document.getElementById('summaryAvg').textContent = avg.toFixed(2) + ' ms';
-            document.getElementById('summaryRange').textContent = stdDev.toFixed(2) + ' ms';
-            document.getElementById('summaryRate').textContent = rate + ' Hz';
-        }
-
-        function handleMouseEnter(event) {
+        // Track actual cursor position
+        document.addEventListener('mousemove', function(e) {
             if (!testData.active) return;
-            
-            const enterTime = performance.now();
-            testData.lastEnterTime = enterTime;
-            const element = event.target;
-            
-            const lag = testData.lag;
-            
-            // Measure event response time
-            setTimeout(() => {
-                if (testData.lastEnterTime === enterTime) {
-                    const responseTime = performance.now() - enterTime;
-                    testData.responseTimes.push(responseTime);
-                    
-                    // Measure paint/render time using requestAnimationFrame
-                    requestAnimationFrame(() => {
-                        const afterStyleTime = performance.now();
-                        const paintTime = afterStyleTime - enterTime;
-                        testData.paintTimes.push(paintTime);
-                        
-                        // Measure when paint actually completes
-                        requestAnimationFrame(() => {
-                            const renderCompleteTime = performance.now();
-                            const totalRenderTime = renderCompleteTime - enterTime;
-                            testData.totalRenderTimes.push(totalRenderTime);
-                            
-                            testData.hoverCount++;
-                        });
-                    });
-                }
-            }, lag);
-        }
 
-        // Attach event listeners only to hover elements (not menu items)
-        document.querySelectorAll('.hover-element').forEach(element => {
-            element.addEventListener('mouseenter', handleMouseEnter);
+            const cursorIndicator = document.getElementById('cursorIndicator');
+            cursorIndicator.style.left = e.clientX + 'px';
+            cursorIndicator.style.top = e.clientY + 'px';
+
+            const currentTime = performance.now();
+            cursorIndicator.setAttribute('data-time', currentTime.toFixed(0) + 'ms');
+
+            testData.mouseMoves++;
+            testData.lastMoveTime = currentTime;
         });
 
-        // Track mouse movement to measure input detection lag
-        document.querySelector('.test-panel').addEventListener('mousemove', function(event) {
-            if (!testData.active) return;
-            
-            const currentTime = performance.now();
-            
-            if (testData.lastMouseTime !== null) {
-                const interval = currentTime - testData.lastMouseTime;
-                testData.mouseUpdateIntervals.push(interval);
-            }
-            
-            testData.lastMouseTime = currentTime;
-            testData.mouseMoveCount++;
-            
-            // Update mouse metrics every 10 events to avoid too frequent updates
-            if (testData.mouseMoveCount % 10 === 0) {
-                updateMouseMetrics();
-            }
+        // Track detected hover on buttons
+        document.querySelectorAll('.test-button').forEach(button => {
+            button.addEventListener('mouseenter', function(e) {
+                if (!testData.active) return;
+
+                const detectedCursor = document.getElementById('detectedCursor');
+                const rect = button.getBoundingClientRect();
+                const centerX = rect.left + rect.width / 2;
+                const centerY = rect.top + rect.height / 2;
+
+                detectedCursor.style.left = centerX + 'px';
+                detectedCursor.style.top = centerY + 'px';
+                detectedCursor.classList.add('active');
+
+                const detectionTime = performance.now();
+                detectedCursor.setAttribute('data-time', detectionTime.toFixed(0) + 'ms');
+
+                // Calculate delay
+                if (testData.lastMoveTime) {
+                    const delay = detectionTime - testData.lastMoveTime;
+                    testData.detectionDelays.push(delay);
+                }
+
+                button.classList.add('detected');
+                testData.detections++;
+                updateMetrics();
+
+                setTimeout(() => {
+                    button.classList.remove('detected');
+                    detectedCursor.classList.remove('active');
+                }, 500);
+            });
         });
 
         function exportResults() {
-            if (testData.responseTimes.length === 0) {
-                alert('No test data to export. Please run the test first.');
-                return;
-            }
-            
-            const avgInterval = testData.mouseUpdateIntervals.reduce((a, b) => a + b, 0) / testData.mouseUpdateIntervals.length;
-            const minInterval = Math.min(...testData.mouseUpdateIntervals);
-            const maxInterval = Math.max(...testData.mouseUpdateIntervals);
-            const variance = testData.mouseUpdateIntervals.reduce((sum, val) => sum + Math.pow(val - avgInterval, 2), 0) / testData.mouseUpdateIntervals.length;
-            const stdDev = Math.sqrt(variance);
-            const updateRate = avgInterval > 0 ? (1000 / avgInterval).toFixed(0) : 0;
-            
-            const duration = testData.startTime ? (Date.now() - testData.startTime) / 1000 : 0;
-            
+            const duration = testData.startTime ? ((Date.now() - testData.startTime) / 1000).toFixed(2) : 0;
+            const avgDelay = testData.detectionDelays.length > 0 
+                ? (testData.detectionDelays.reduce((a, b) => a + b, 0) / testData.detectionDelays.length).toFixed(2)
+                : 0;
+            const maxDelay = testData.detectionDelays.length > 0 
+                ? Math.max(...testData.detectionDelays).toFixed(2)
+                : 0;
+            const minDelay = testData.detectionDelays.length > 0 
+                ? Math.min(...testData.detectionDelays).toFixed(2)
+                : 0;
+
             const results = {
                 timestamp: new Date().toISOString(),
                 sessionLabel: testData.sessionLabel,
-                testDuration: duration.toFixed(2) + ' seconds',
-                mouseDetectionMetrics: {
-                    totalMouseUpdates: testData.mouseMoveCount,
-                    avgUpdateInterval: avgInterval.toFixed(2) + ' ms',
-                    minUpdateInterval: minInterval.toFixed(2) + ' ms',
-                    maxUpdateInterval: maxInterval.toFixed(2) + ' ms',
-                    stdDeviation: stdDev.toFixed(2) + ' ms',
-                    updateRate: updateRate + ' Hz',
-                    allUpdateIntervals: testData.mouseUpdateIntervals
+                testDuration: duration + ' seconds',
+                totalMouseMoves: testData.mouseMoves,
+                totalDetections: testData.detections,
+                detectionMetrics: {
+                    avgDetectionDelay: avgDelay + ' ms',
+                    minDetectionDelay: minDelay + ' ms',
+                    maxDetectionDelay: maxDelay + ' ms',
+                    allDelays: testData.detectionDelays
                 },
                 environment: {
                     userAgent: navigator.userAgent,
@@ -770,20 +519,17 @@
                     screenResolution: window.screen.width + 'x' + window.screen.height
                 }
             };
-            
+
             const dataStr = JSON.stringify(results, null, 2);
             const dataBlob = new Blob([dataStr], {type: 'application/json'});
             const url = URL.createObjectURL(dataBlob);
             const link = document.createElement('a');
             link.href = url;
             const filename = testData.sessionLabel.replace(/[^a-z0-9]/gi, '_').toLowerCase();
-            link.download = 'hover-performance-' + filename + '-' + Date.now() + '.json';
+            link.download = 'mouse-lag-test-' + filename + '-' + Date.now() + '.json';
             link.click();
             URL.revokeObjectURL(url);
         }
-
-        // Apply initial config
-        applyConfig();
     </script>
 </body>
 </html>
